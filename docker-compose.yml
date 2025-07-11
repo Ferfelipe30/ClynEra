@@ -2,17 +2,19 @@ version: '3.8'
 
 services:
   db:
-    image: postgres:14-alpine
-    container_name: clynera_db_container
+    image: mysql:5.7
+    container_name: clynera_mysql_container
     restart: unless-stopped
     environment:
-      - POSTGRES_USER=clynera_user
-      - POSTGRES_PASSWORD=clynera_password
-      - POSTGRES_DB=clynera_db
+      - MYSQL_ROOT_PASSWORD=root_password
+      - MYSQL_DATABASE=laboratorio_clinico
+      - MYSQL_USER=clynera_user
+      - MYSQL_PASSWORD=clynera_password
     ports:
-      - "5432:5432"
+      - "3307:3306"
     volumes:
-      - postgres_data:/var/lib/postgresql/data/
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
 volumes:
-  postgres_data:
+  mysql_data:

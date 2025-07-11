@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import PacienteRegistro from '../views/PacienteRegistro.vue'
+import ListaPacientes from '../views/ListaPacientes.vue'
 import OrdenRegistro from '../views/OrdenRegistro.vue'
 import HistorialPaciente from '../views/HistorialPaciente.vue'
 import DetalleOrden from '../views/DetalleOrden.vue'
@@ -10,6 +11,7 @@ const router = createRouter({
   routes: [
     { path: '/', name: 'home', component: HomeView, },
     { path: '/paciente', name: 'paciente', component: PacienteRegistro },
+    { path: '/pacientes', name: 'lista-pacientes', component: ListaPacientes },
     { path: '/orden', name: 'orden', component: OrdenRegistro },
     { path: '/historial/:documento', name: 'historial', component: HistorialPaciente },
     { path: '/orden/detalle/:id', name: 'detalleOrden', component: DetalleOrden },
