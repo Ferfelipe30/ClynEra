@@ -13,12 +13,12 @@ const examenes = ref([])
 const loading = ref(false)
 const mensaje = ref('')
 const hasError = ref(false)
-const activeTab = ref('Hematology')
+const activeTab = ref('Hematología')
 
 const examenesPorCategoria = computed(() => {
-  const categorias = { Hematology: [], Chemistry: [], Immunology: [] }
+  const categorias = { Hematología: [], Química: [], Uroanálisis: [] }
   for (const ex of examenes.value) {
-    if (categorias[ex.categoria]) categorias[ex.categoria].push(ex)
+    if (categorias[ex.area]) categorias[ex.area].push(ex)
   }
   return categorias
 })
@@ -26,7 +26,7 @@ const examenesPorCategoria = computed(() => {
 const pacienteFiltrado = computed(() => {
   if (!pacienteSearch.value) return pacientes.value
   return pacientes.value.filter(p =>
-    p.nombre.toLowerCase().includes(pacienteSearch.value.toLowerCase()) ||
+    p.nombre_completo.toLowerCase().includes(pacienteSearch.value.toLowerCase()) ||
     (p.documento && p.documento.includes(pacienteSearch.value))
   )
 })
@@ -114,8 +114,8 @@ async function registrarOrden() {
             @input="pacienteId = ''"
           />
           <ul v-if="pacienteSearch && pacienteFiltrado.length" class="autocomplete-list">
-            <li v-for="p in pacienteFiltrado" :key="p.id" @click="pacienteId = p.id; pacienteSearch = p.nombre + (p.documento ? ' ('+p.documento+')' : '')">
-              {{ p.nombre }} <span v-if="p.documento">({{ p.documento }})</span>
+            <li v-for="p in pacienteFiltrado" :key="p.id" @click="pacienteId = p.id; pacienteSearch = p.nombre_completo + (p.documento ? ' ('+p.documento+')' : '')">
+              {{ p.nombre_completo }} <span v-if="p.documento">({{ p.documento }})</span>
             </li>
           </ul>
         </div>
@@ -148,7 +148,7 @@ async function registrarOrden() {
       <div class="summary-block">
         <div class="summary-label">Patient</div>
         <div v-if="pacienteSeleccionado">
-          <div class="summary-patient-name">{{ pacienteSeleccionado.nombre }}</div>
+          <div class="summary-patient-name">{{ pacienteSeleccionado.nombre_completo }}</div>
           <div class="summary-patient-id">ID: {{ pacienteSeleccionado.documento }}</div>
         </div>
         <div v-else class="summary-empty">No patient selected</div>

@@ -1,11 +1,19 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
+import { useApi } from './composables/useApi.js'
 
 const mobileMenuOpen = ref(false)
+const { apiState, checkApiConnection } = useApi()
+
 const toggleMobileMenu = () => {
   mobileMenuOpen.value = !mobileMenuOpen.value
 }
+
+// Verificar conexión con la API al cargar la aplicación
+onMounted(async () => {
+  await checkApiConnection()
+})
 </script>
 
 <template>
@@ -29,6 +37,11 @@ const toggleMobileMenu = () => {
         <RouterLink to="/orden" class="btn btn-secondary" @click="mobileMenuOpen = false">Orden de Examen</RouterLink>
       </div>
     </div>
+    <!-- Indicador de estado de conexión API -->
+    <div class="api-status" :class="{ connected: apiState.isConnected, disconnected: !apiState.isConnected }">
+      <span class="status-dot"></span>
+      <span class="status-text">{{ apiState.isConnected ? 'API Conectada' : 'API Desconectada' }}</span>
+    </div>
   </nav>
   <main class="main-content">
     <RouterView />
@@ -50,14 +63,55 @@ const toggleMobileMenu = () => {
   z-index: 100;
   box-shadow: 0 2px 8px rgba(0,0,0,0.02);
 }
-.main-content {
-  width: 100vw;
-  min-height: 100vh;
-  background: #fff;
-  display: block;
-  padding: 0;
-  margin: 0;
-}
+  .main-content {
+    width: 100vw;
+    min-height: 100vh;
+    background: #fff;
+    display: block;
+    padding: 0;
+    margin: 0;
+  }
+  
+  /* Indicador de estado de conexión API */
+  .api-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-left: 16px;
+  }
+  
+  .api-status.connected {
+    background: #dcfce7;
+    color: #166534;
+  }
+  
+  .api-status.disconnected {
+    background: #fef2f2;
+    color: #dc2626;
+  }
+  
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  
+  .api-status.connected .status-dot {
+    background: #22c55e;
+  }
+  
+  .api-status.disconnected .status-dot {
+    background: #ef4444;
+  }
+  
+  .status-text {
+    white-space: nowrap;
+  }
 .navbar-left {
   display: flex;
   align-items: center;
@@ -200,6 +254,10 @@ const toggleMobileMenu = () => {
     gap: 10px;
     width: 100%;
     margin-top: 8px;
+  }
+  .api-status {
+    margin-left: 8px;
+    font-size: 0.7rem;
   }
   .main-content {
     padding: 0;

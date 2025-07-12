@@ -14,7 +14,7 @@ def create_database_and_tables():
             host='localhost',
             port=3306,
             user='root',
-            password='',
+            password='1003',
             charset='utf8mb4'
         )
         

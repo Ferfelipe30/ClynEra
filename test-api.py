@@ -28,7 +28,7 @@ def test_create_patient():
     print("\n🔍 Probando creación de paciente...")
     
     patient_data = {
-        "nombre": "Juan Pérez",
+        "nombre_completo": "Juan Pérez",
         "documento": "12345678",
         "fecha_nacimiento": "1990-05-15",
         "genero": "Masculino"
@@ -57,7 +57,7 @@ def test_get_patients():
             patients = response.json()
             print(f"✅ Lista de pacientes obtenida: {len(patients)} pacientes")
             for patient in patients:
-                print(f"   - {patient['nombre']} (ID: {patient['id']})")
+                print(f"   - {patient['nombre_completo']} (ID: {patient['id']})")
         else:
             print(f"❌ Error al obtener pacientes: {response.status_code}")
             print(f"   Respuesta: {response.text}")
@@ -75,7 +75,7 @@ def test_get_patient_by_id(patient_id):
         if response.status_code == 200:
             patient = response.json()
             print("✅ Paciente obtenido por ID")
-            print(f"   Nombre: {patient['nombre']}")
+            print(f"   Nombre: {patient['nombre_completo']}")
             print(f"   Documento: {patient['documento']}")
         else:
             print(f"❌ Error al obtener paciente por ID: {response.status_code}")
@@ -91,7 +91,7 @@ def test_update_patient(patient_id):
     print(f"\n🔍 Probando actualización de paciente (ID: {patient_id})...")
     
     update_data = {
-        "nombre": "Juan Carlos Pérez",
+        "nombre_completo": "Juan Carlos Pérez",
         "documento": "12345678",
         "fecha_nacimiento": "1990-05-15",
         "genero": "Masculino"
@@ -102,7 +102,7 @@ def test_update_patient(patient_id):
         if response.status_code == 200:
             patient = response.json()
             print("✅ Paciente actualizado exitosamente")
-            print(f"   Nuevo nombre: {patient['nombre']}")
+            print(f"   Nuevo nombre: {patient['nombre_completo']}")
         else:
             print(f"❌ Error al actualizar paciente: {response.status_code}")
             print(f"   Respuesta: {response.text}")

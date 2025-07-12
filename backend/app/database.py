@@ -1,14 +1,15 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
 import os
 from dotenv import load_dotenv
-from fastapi.middleware.cors import CORSMiddleware
 
-# Cargar las variables de entorno desde un archivo .env
 load_dotenv()
 
-# Default database URL for MySQL (Docker)
-SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "mysql+pymysql://root:root_password@localhost:3307/laboratorio_clinico?charset=utf8mb4")
+DEFAULT_DATABASE_URL = "mysql+pymysql://root:1003@localhost:3306/laboratorio_clinico?charset=utf8mb4"
+
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", DEFAULT_DATABASE_URL)
+
+print(f"🔗 Conectando a la base de datos: {SQLALCHEMY_DATABASE_URL}")
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
@@ -19,5 +20,4 @@ engine = create_engine(
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-class Base(DeclarativeBase):
-    pass
+Base = declarative_base()

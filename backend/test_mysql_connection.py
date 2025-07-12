@@ -10,10 +10,10 @@ def test_mysql_connection():
     """Prueba la conexión directa a MySQL."""
     connection_params = {
         'host': 'localhost',
-        'port': 3307,
+        'port': 3306,
         'database': 'laboratorio_clinico',
         'user': 'root',
-        'password': 'root_password',
+        'password': '1003',
         'charset': 'utf8mb4'
     }
     
@@ -60,9 +60,10 @@ def test_mysql_connection():
         print(f"❌ Error de conexión: {e}")
         print("\n💡 Posibles soluciones:")
         print("1. Verificar que MySQL esté ejecutándose en Docker")
-        print("2. Verificar que el puerto 3307 esté disponible")
+        print("2. Verificar que el puerto 3306 esté disponible")
         print("3. Verificar usuario y contraseña")
         print("4. Ejecutar: docker-compose up -d")
+        print("5. Ejecutar: setup-mysql-database.bat")
         return False
         
     except Exception as e:

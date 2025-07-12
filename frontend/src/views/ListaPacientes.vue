@@ -2,17 +2,36 @@
   <div class="patients-container">
     <div class="patients-header">
       <h1 class="patients-title">Lista de Pacientes</h1>
-      <button @click="cargarPacientes" :disabled="loading" class="refresh-btn">
-        {{ loading ? 'Cargando...' : 'Actualizar' }}
-      </button>
+      <div class="header-actions">
+        <div class="search-container">
+          <input 
+            type="text" 
+            v-model="searchTerm" 
+            placeholder="Buscar por nombre o documento..." 
+            class="search-input"
+            @input="filterPacientes"
+          />
+        </div>
+        <button @click="cargarPacientes" :disabled="loading" class="refresh-btn">
+          {{ loading ? 'Cargando...' : 'Actualizar' }}
+        </button>
+      </div>
     </div>
     
     <div v-if="mensaje" :class="['mensaje', { error: hasError, success: !hasError }]">
       {{ mensaje }}
     </div>
     
+    <div v-if="pacientes.length > 0" class="patients-stats">
+      <p>Mostrando {{ filteredPacientes.length }} de {{ pacientes.length }} pacientes</p>
+    </div>
+    
     <div v-if="pacientes.length === 0 && !loading" class="no-patients">
       <p>No hay pacientes registrados.</p>
+    </div>
+    
+    <div v-else-if="filteredPacientes.length === 0 && pacientes.length > 0 && !loading" class="no-patients">
+      <p>No se encontraron pacientes que coincidan con la búsqueda.</p>
     </div>
     
     <div v-else-if="loading" class="loading">
@@ -20,14 +39,15 @@
     </div>
     
     <div v-else class="patients-grid">
-      <div v-for="paciente in pacientes" :key="paciente.id" class="patient-card">
+      <div v-for="paciente in filteredPacientes" :key="paciente.id" class="patient-card">
         <div class="patient-info">
-          <h3 class="patient-name">{{ paciente.nombre }}</h3>
+          <h3 class="patient-name">{{ paciente.nombre_completo }}</h3>
           <p class="patient-document">Documento: {{ paciente.documento }}</p>
           <p class="patient-birth">Fecha de Nacimiento: {{ formatDate(paciente.fecha_nacimiento) }}</p>
           <p class="patient-gender">Género: {{ paciente.genero }}</p>
         </div>
         <div class="patient-actions">
+          <button @click="verDetalles(paciente)" class="view-btn">Ver Detalles</button>
           <button @click="editarPaciente(paciente)" class="edit-btn">Editar</button>
           <button @click="eliminarPaciente(paciente.id)" class="delete-btn">Eliminar</button>
         </div>
@@ -42,6 +62,8 @@ import axios from 'axios'
 import { config } from '../config.js'
 
 const pacientes = ref([])
+const filteredPacientes = ref([])
+const searchTerm = ref('')
 const loading = ref(false)
 const mensaje = ref('')
 const hasError = ref(false)
@@ -51,16 +73,30 @@ const formatDate = (dateString) => {
   return date.toLocaleDateString('es-ES')
 }
 
+const filterPacientes = () => {
+  if (!searchTerm.value.trim()) {
+    filteredPacientes.value = pacientes.value
+    return
+  }
+  
+  const term = searchTerm.value.toLowerCase().trim()
+  filteredPacientes.value = pacientes.value.filter(paciente => 
+    paciente.nombre_completo.toLowerCase().includes(term) ||
+    paciente.documento.toLowerCase().includes(term)
+  )
+}
+
 const cargarPacientes = async () => {
   loading.value = true
   mensaje.value = ''
   hasError.value = false
   
   try {
-    console.log('Cargando pacientes desde:', `${config.API_BASE_URL}/paciente/`)
-    const response = await axios.get(`${config.API_BASE_URL}/paciente/`)
+    console.log('Cargando pacientes desde:', `${config.API_BASE_URL}/pacientes/`)
+    const response = await axios.get(`${config.API_BASE_URL}/pacientes/`)
     console.log('Pacientes cargados:', response.data)
     pacientes.value = response.data
+    filteredPacientes.value = response.data
   } catch (e) {
     console.error('Error al cargar pacientes:', e)
     hasError.value = true
@@ -77,10 +113,14 @@ const cargarPacientes = async () => {
   }
 }
 
+const verDetalles = (paciente) => {
+  alert(`Detalles del paciente:\n\nNombre: ${paciente.nombre_completo}\nDocumento: ${paciente.documento}\nFecha de Nacimiento: ${formatDate(paciente.fecha_nacimiento)}\nGénero: ${paciente.genero}`)
+}
+
 const editarPaciente = (paciente) => {
   // TODO: Implementar edición de paciente
   console.log('Editar paciente:', paciente)
-  alert(`Función de edición para paciente: ${paciente.nombre}`)
+  alert(`Función de edición para paciente: ${paciente.nombre_completo}`)
 }
 
 const eliminarPaciente = async (pacienteId) => {
@@ -89,10 +129,11 @@ const eliminarPaciente = async (pacienteId) => {
   }
   
   try {
-    await axios.delete(`${config.API_BASE_URL}/paciente/${pacienteId}`)
+    await axios.delete(`${config.API_BASE_URL}/pacientes/${pacienteId}`)
     mensaje.value = 'Paciente eliminado correctamente.'
     hasError.value = false
     await cargarPacientes() // Recargar la lista
+    filterPacientes() // Reaplicar filtros
   } catch (e) {
     console.error('Error al eliminar paciente:', e)
     hasError.value = true
@@ -123,6 +164,32 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.header-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.search-container {
+  position: relative;
+}
+
+.search-input {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 1rem;
+  width: 300px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-input:focus {
+  border-color: #2196f3;
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.1);
 }
 
 .patients-title {
@@ -171,6 +238,14 @@ onMounted(() => {
   background-color: #f8d7da;
   color: #721c24;
   border: 1px solid #f5c6cb;
+}
+
+.patients-stats {
+  max-width: 1200px;
+  margin: 0 auto 20px auto;
+  text-align: right;
+  color: #666;
+  font-size: 0.9rem;
 }
 
 .no-patients, .loading {
@@ -228,6 +303,7 @@ onMounted(() => {
   gap: 12px;
 }
 
+.view-btn,
 .edit-btn,
 .delete-btn {
   flex: 1;
@@ -238,6 +314,15 @@ onMounted(() => {
   font-weight: 500;
   cursor: pointer;
   transition: background 0.2s;
+}
+
+.view-btn {
+  background: #17a2b8;
+  color: #fff;
+}
+
+.view-btn:hover {
+  background: #138496;
 }
 
 .edit-btn {

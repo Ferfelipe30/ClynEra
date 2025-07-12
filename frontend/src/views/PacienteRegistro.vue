@@ -25,7 +25,12 @@
           </select>
         </div>
         <div class="form-actions">
-          <button type="submit" :disabled="loading">{{ loading ? 'Registrando...' : 'Registrar' }}</button>
+          <button type="submit" :disabled="loading" class="submit-btn">
+            {{ loading ? 'Registrando...' : 'Registrar Paciente' }}
+          </button>
+          <button type="button" @click="resetForm" class="reset-btn">
+            Limpiar Formulario
+          </button>
         </div>
         <div v-if="mensaje" :class="['mensaje', { error: hasError, success: !hasError }]">
           {{ mensaje }}
@@ -37,8 +42,8 @@
 
 <script setup>
 import { ref } from 'vue'
-import axios from 'axios'
-import { config } from '../config.js'
+import { pacientesService } from '../services/api.js'
+import { useApi } from '../composables/useApi.js'
 
 const paciente = ref({
   nombre_completo: '',
@@ -48,15 +53,14 @@ const paciente = ref({
 })
 
 const mensaje = ref('')
-const loading = ref(false)
 const hasError = ref(false)
+const { loading, executeApiCall } = useApi()
 
 const resetForm = () => {
   paciente.value = { nombre_completo: '', documento: '', fecha_nacimiento: '', genero: '' }
 }
 
 async function registrarPaciente() {
-  loading.value = true
   mensaje.value = ''
   hasError.value = false
   
@@ -64,55 +68,21 @@ async function registrarPaciente() {
   if (!paciente.value.nombre_completo || !paciente.value.documento || !paciente.value.fecha_nacimiento || !paciente.value.genero) {
     mensaje.value = 'Por favor complete todos los campos requeridos.'
     hasError.value = true
-    loading.value = false
     return
   }
   
-  try {
-    console.log('Enviando datos:', paciente.value)
-    console.log('URL de la API:', `${config.API_BASE_URL}/paciente/`)
-    
-    const apiUrl = `${config.API_BASE_URL}/paciente/`;
-    const response = await axios.post(apiUrl, paciente.value)
-    
-    console.log('Respuesta del servidor:', response.data)
+  const result = await executeApiCall(
+    () => pacientesService.createPaciente(paciente.value),
+    'Paciente registrado correctamente'
+  )
+  
+  if (result.success) {
     mensaje.value = 'Paciente registrado correctamente.'
     hasError.value = false
     resetForm()
-  } catch (e) {
-    console.error('Error completo:', e)
+  } else {
+    mensaje.value = `Error al registrar paciente: ${result.error}`
     hasError.value = true
-    
-    if (e.response) {
-      // El servidor respondió con un código de estado de error
-      console.error('Respuesta de error del servidor:', e.response.data)
-      console.error('Código de estado:', e.response.status)
-      
-      const errorData = e.response.data
-      let errorMessage = 'Ocurrió un error en el servidor.'
-      
-      if (typeof errorData === 'string') {
-        errorMessage = errorData
-      } else if (errorData.detail) {
-        errorMessage = errorData.detail
-      } else if (typeof errorData === 'object') {
-        errorMessage = Object.entries(errorData)
-          .map(([key, value]) => `${key}: ${value}`)
-          .join(', ')
-      }
-      
-      mensaje.value = `Error al registrar paciente: ${errorMessage}`
-    } else if (e.request) {
-      // La petición fue hecha pero no se recibió respuesta
-      console.error('No se recibió respuesta del servidor')
-      mensaje.value = 'No se pudo conectar con el servidor. Verifique que el backend esté ejecutándose.'
-    } else {
-      // Algo más causó el error
-      console.error('Error al configurar la petición:', e.message)
-      mensaje.value = 'Error al configurar la petición. Verifique la configuración.'
-    }
-  } finally {
-    loading.value = false
   }
 }
 </script>
@@ -181,24 +151,46 @@ async function registrarPaciente() {
 
 .form-actions {
   display: flex;
+  gap: 12px;
   justify-content: flex-end;
   margin-top: 18px;
 }
 
-.form-actions button {
+.submit-btn {
   background: #2196f3;
   color: #fff;
   border: none;
   border-radius: 8px;
-  padding: 10px 28px;
+  padding: 12px 24px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s;
 }
 
-.form-actions button:hover {
+.submit-btn:hover:not(:disabled) {
   background: #1769aa;
+}
+
+.submit-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.reset-btn {
+  background: #6c757d;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.reset-btn:hover {
+  background: #5a6268;
 }
 .mensaje {
   margin-top: 1rem;

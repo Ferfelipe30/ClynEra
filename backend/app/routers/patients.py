@@ -6,15 +6,12 @@ from .. import crud, schemas
 from ..dependencies import get_db
 
 router = APIRouter(
-    prefix="/paciente",
+    prefix="/pacientes",
     tags=["pacientes"],
 )
 
 @router.post("/", response_model=schemas.Paciente, status_code=201)
 def create_paciente_endpoint(paciente: schemas.PacienteCreate, db: Session = Depends(get_db)):
-    """
-    Crear un nuevo paciente.
-    """
     db_paciente = crud.get_paciente_by_documento(db, documento=paciente.documento)
     if db_paciente:
         raise HTTPException(status_code=400, detail="El documento ya esta registrado")
@@ -22,9 +19,6 @@ def create_paciente_endpoint(paciente: schemas.PacienteCreate, db: Session = Dep
 
 @router.get("/", response_model=List[schemas.Paciente])
 def get_pacientes_endpoint(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    """
-    Obtener lista de pacientes.
-    """
     pacientes = crud.get_pacientes(db, skip=skip, limit=limit)
     return pacientes
 
