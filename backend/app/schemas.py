@@ -37,17 +37,27 @@ class OrdenExamenCreate(OrdenExamenBase):
     pass
 
 class OrdenExamen(OrdenExamenBase):
-    """Properties to return to client for an OrderExam."""
     id: int
-    resultados: Optional[str]
-    fecha_resultado: Optional[datetime.datetime]
-    examen: Examen
-    model_config = ConfigDict(from_attributes=True)
+    id_orden: int
+    id_examen: int
+    resultado: str | None = None
+    fecha_resultado: datetime.datetime | None = None
+    examen: Examen | None
+
+    class Config:
+        orm_mode = True
 
 class OrdenBase(BaseModel):
-    """Base properties for an Order."""
+    id: int
+    numero_orden: str
+    fecha_creacion: datetime.datetime
+    id_paciente: int
     estado: str
-    paciente_id: int
+    paciente: Paciente | None
+    examenes: List[OrdenExamen] = []
+
+    class Config:
+        orm_mode = True
 
 class OrdenCreate(OrdenBase):
     """Properties to receive on Order creation."""

@@ -4,6 +4,7 @@ import datetime
 import random
 import string
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import joinedload
 
 # Importa los esquemas que creaste
 from . import schemas
@@ -47,8 +48,6 @@ def read_root():
     Un endpoint raíz para confirmar que la API está funcionando.
     """
     return {"message": "Bienvenido a la API de ClynEra"}
-
-
 
 # Endpoints for exams
 @app.get("/examenes", response_model=List[schemas.Examen])
@@ -94,24 +93,15 @@ def create_orden_endpoint(orden_data: dict):
     """
     db = SessionLocal()
     try:
-        # Validate required fields
-        if "paciente_id" not in orden_data:
-            raise HTTPException(status_code=400, detail="paciente_id is required")
-        if "examen_ids" not in orden_data:
-            raise HTTPException(status_code=400, detail="examen_ids is required")
-        
-        # Validate patient exists
-        paciente = crud.get_paciente_by_id(db, orden_data["paciente_id"])
-        if not paciente:
-            raise HTTPException(status_code=404, detail="Patient not found")
-        
-        # Validate exams exist
-        for examen_id in orden_data["examen_ids"]:
-            examen = crud.get_examen_by_id(db, examen_id)
-            if not examen:
-                raise HTTPException(status_code=404, detail=f"Exam with id {examen_id} not found")
-        
-        return crud.create_orden(db=db, orden_data=orden_data)
+        nueva_orden = crud.create_orden(db=db, orden_data=orden_data)
+        # Recargar la orden con TODAS las relaciones antes de cerrar la sesión
+        orden_con_relaciones = db.query(models.Orden)\
+            .options(
+                joinedload(models.Orden.paciente),
+                joinedload(models.Orden.examenes).joinedload(models.OrdenExamen.examen)
+            )\
+            .filter(models.Orden.id == nueva_orden.id).first()
+        return orden_con_relaciones
     finally:
         db.close()
 
