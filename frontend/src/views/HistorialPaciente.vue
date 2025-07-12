@@ -124,7 +124,11 @@ function daysInMonth(month, year) {
         </thead>
         <tbody>
           <tr v-for="orden in ordenesFiltradas" :key="orden.id">
-            <td>{{ orden.id }}</td>
+            <td>
+              <router-link :to="`/orden/detalle/${orden.id}`" class="order-date-link">
+                {{ orden.id }}
+              </router-link>
+            </td>
             <td>{{ orden.paciente?.nombre_completo }}</td>
             <td>{{ orden.paciente?.documento }}</td>
             <td>{{ new Date(orden.fecha_creacion).toLocaleDateString() }}</td>

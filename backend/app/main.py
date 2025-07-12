@@ -117,7 +117,12 @@ def get_orden_endpoint(orden_id: int):
     """
     db = SessionLocal()
     try:
-        orden = crud.get_orden_by_id(db, orden_id=orden_id)
+        orden = db.query(models.Orden)\
+            .options(
+                joinedload(models.Orden.paciente),
+                joinedload(models.Orden.examenes).joinedload(models.OrdenExamen.examen)
+            )\
+            .filter(models.Orden.id == orden_id).first()
         if orden is None:
             raise HTTPException(status_code=404, detail="Order not found")
         return orden
