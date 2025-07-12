@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlalchemy.orm import Session
 from typing import List
+import bcrypt
 
 from .. import crud, schemas
 from ..dependencies import get_db
@@ -9,6 +10,17 @@ router = APIRouter(
     prefix="/pacientes",
     tags=["pacientes"],
 )
+
+@router.post("/login")
+def login_paciente(
+    documento: str = Body(...), 
+    contraseña: str = Body(...), 
+    db: Session = Depends(get_db)
+):
+    paciente = crud.get_paciente_by_documento(db, documento=documento)
+    if not paciente or not bcrypt.checkpw(contraseña.encode(), paciente.contraseña.encode()):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciales inválidas")
+    return {"message": "Login exitoso", "paciente_id": paciente.id}
 
 @router.post("/", response_model=schemas.Paciente, status_code=201)
 def create_paciente_endpoint(paciente: schemas.PacienteCreate, db: Session = Depends(get_db)):

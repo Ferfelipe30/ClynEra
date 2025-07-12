@@ -10,6 +10,7 @@ class Paciente(Base):
     documento = Column(String(20), unique=True, nullable=False)
     fecha_nacimiento = Column(Date, nullable=False)
     genero = Column(Enum('Masculino', 'Femenino', 'Otro'), nullable=False)
+    contraseña = Column(String(128), nullable=False)
     ordenes = relationship("Orden", back_populates="paciente")
     
 class Examen(Base):

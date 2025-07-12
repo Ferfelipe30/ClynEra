@@ -3,18 +3,15 @@ from typing import List, Optional
 import datetime
 
 class PacienteBase(BaseModel):
-    """Base properties for a Patient."""
     nombre_completo: str
     documento: str
     fecha_nacimiento: datetime.date
     genero: str
 
 class PacienteCreate(PacienteBase):
-    """Properties to receive via API on patient creation."""
-    pass
+    contraseña: str
 
 class Paciente(PacienteBase):
-    """Properties to return to client."""
     id: int
     model_config = ConfigDict(from_attributes=True)
 
@@ -37,27 +34,17 @@ class OrdenExamenCreate(OrdenExamenBase):
     pass
 
 class OrdenExamen(OrdenExamenBase):
+    """Properties to return to client for an OrderExam."""
     id: int
-    id_orden: int
-    id_examen: int
-    resultado: str | None = None
-    fecha_resultado: datetime.datetime | None = None
-    examen: Examen | None
-
-    class Config:
-        orm_mode = True
+    resultados: Optional[str]
+    fecha_resultado: Optional[datetime.datetime]
+    examen: Examen
+    model_config = ConfigDict(from_attributes=True)
 
 class OrdenBase(BaseModel):
-    id: int
-    numero_orden: str
-    fecha_creacion: datetime.datetime
-    id_paciente: int
+    """Base properties for an Order."""
     estado: str
-    paciente: Paciente | None
-    examenes: List[OrdenExamen] = []
-
-    class Config:
-        orm_mode = True
+    paciente_id: int
 
 class OrdenCreate(OrdenBase):
     """Properties to receive on Order creation."""

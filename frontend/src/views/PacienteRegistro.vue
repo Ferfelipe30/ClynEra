@@ -16,6 +16,10 @@
           <input type="date" v-model="paciente.fecha_nacimiento" required />
         </div>
         <div class="form-group">
+          <label>Contraseña</label>
+          <input type="password" v-model="paciente.contraseña" placeholder="Contraseña" required />
+        </div>
+        <div class="form-group">
           <label>Género</label>
           <select v-model="paciente.genero" required>
             <option disabled value="">Seleccione una opción</option>
@@ -49,7 +53,8 @@ const paciente = ref({
   nombre_completo: '',
   documento: '',
   fecha_nacimiento: '',
-  genero: ''
+  genero: '',
+  contraseña: ''
 })
 
 const mensaje = ref('')
@@ -57,7 +62,7 @@ const hasError = ref(false)
 const { loading, executeApiCall } = useApi()
 
 const resetForm = () => {
-  paciente.value = { nombre_completo: '', documento: '', fecha_nacimiento: '', genero: '' }
+  paciente.value = { nombre_completo: '', documento: '', fecha_nacimiento: '', genero: '', contraseña: '' }
 }
 
 async function registrarPaciente() {
@@ -65,7 +70,7 @@ async function registrarPaciente() {
   hasError.value = false
   
   // Validar datos antes de enviar
-  if (!paciente.value.nombre_completo || !paciente.value.documento || !paciente.value.fecha_nacimiento || !paciente.value.genero) {
+  if (!paciente.value.nombre_completo || !paciente.value.documento || !paciente.value.fecha_nacimiento || !paciente.value.genero || !paciente.value.contraseña ) {
     mensaje.value = 'Por favor complete todos los campos requeridos.'
     hasError.value = true
     return

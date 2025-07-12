@@ -4,6 +4,7 @@ from typing import List
 import datetime
 import random
 import string
+import bcrypt
 
 def get_paciente_by_documento(db: Session, documento: str) -> models.Paciente | None:
     return db.query(models.Paciente).filter(models.Paciente.documento == documento).first()
@@ -14,8 +15,11 @@ def get_paciente_by_id(db: Session, paciente_id: int) -> models.Paciente | None:
 def get_pacientes(db: Session, skip: int = 0, limit: int = 100) -> List[models.Paciente]:
     return db.query(models.Paciente).offset(skip).limit(limit).all()
 
-def create_paciente(db: Session, paciente: schemas.PacienteCreate) -> models.Paciente:
-    db_paciente = models.Paciente(**paciente.model_dump())
+def create_paciente(db: Session, paciente: schemas.PacienteCreate):
+    hashed = bcrypt.hashpw(paciente.contraseña.encode(), bcrypt.gensalt()).decode()
+    paciente_dict = paciente.model_dump()
+    paciente_dict['contraseña'] = hashed
+    db_paciente = models.Paciente(**paciente_dict)
     db.add(db_paciente)
     db.commit()
     db.refresh(db_paciente)
