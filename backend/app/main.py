@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from typing import List
 import datetime
 import random
@@ -81,7 +81,12 @@ def get_ordenes_endpoint(skip: int = 0, limit: int = 100):
     """
     db = SessionLocal()
     try:
-        ordenes = crud.get_ordenes(db, skip=skip, limit=limit)
+        ordenes = db.query(models.Orden)\
+            .options(
+                joinedload(models.Orden.paciente),
+                joinedload(models.Orden.examenes).joinedload(models.OrdenExamen.examen)
+            )\
+            .offset(skip).limit(limit).all()
         return ordenes
     finally:
         db.close()
@@ -144,5 +149,25 @@ def delete_orden_endpoint(orden_id: int):
         if not success:
             raise HTTPException(status_code=404, detail="Order not found")
         return {"message": "Order deleted successfully"}
+    finally:
+        db.close()
+        
+@app.get("/ordenes/by_documento", response_model=List[schemas.Orden])
+def get_ordenes_by_documento(documento: str = Query(..., description="Documento del paciente")):
+    """
+    Listar órdenes por documento de paciente.
+    """
+    db = SessionLocal()
+    try:
+        paciente = crud.get_paciente_by_documento(db, documento)
+        if not paciente:
+            raise HTTPException(status_code=404, detail="Paciente no encontrado")
+        ordenes = db.query(models.Orden)\
+            .options(
+                joinedload(models.Orden.paciente),
+                joinedload(models.Orden.examenes).joinedload(models.OrdenExamen.examen)
+            )\
+            .filter(models.Orden.id_paciente == paciente.id).all()
+        return ordenes
     finally:
         db.close()

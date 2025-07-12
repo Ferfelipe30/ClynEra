@@ -9,6 +9,7 @@ const documento = route.params.documento
 
 const paciente = ref(null)
 const ordenes = ref([])
+const searchDocumento = ref('')
 const loading = ref(false)
 const search = ref('')
 const testType = ref('')
@@ -27,21 +28,11 @@ const testTypes = ref([
   { value: 'CMP', label: 'Comprehensive Metabolic Panel (CMP)' },
 ])
 
-const filteredOrders = computed(() => {
-  let result = ordenes.value
-  if (search.value) {
-    result = result.filter(o =>
-      o.id.toLowerCase().includes(search.value.toLowerCase()) ||
-      o.test.toLowerCase().includes(search.value.toLowerCase())
-    )
-  }
-  if (testType.value) {
-    result = result.filter(o => o.type === testType.value)
-  }
-  if (selectedDate.value) {
-    result = result.filter(o => o.date === selectedDate.value)
-  }
-  return result
+const ordenesFiltradas = computed(() => {
+  if (!searchDocumento.value.trim()) return ordenes.value
+  return ordenes.value.filter(o => 
+    o.paciente?.documento?.includes(searchDocumento.value.trim())
+  )
 })
 
 function setCalendar(month, year) {
@@ -62,20 +53,8 @@ function clearFilters() {
 onMounted(async () => {
   loading.value = true
   try {
-    // Simulación de datos. Reemplazar por llamada real:
-    paciente.value = { nombre: 'Eleanor Vance', documento }
-    ordenes.value = [
-      { id: 'ORD-2024-10-26-001', date: '2024-10-26', test: 'Complete Blood Count (CBC)', type: 'CBC', status: 'Completed' },
-      { id: 'ORD-2024-10-15-002', date: '2024-10-15', test: 'Lipid Panel', type: 'Lipid', status: 'Completed' },
-      { id: 'ORD-2024-10-01-003', date: '2024-10-01', test: 'Thyroid Function Test', type: 'Thyroid', status: 'Completed' },
-      { id: 'ORD-2024-09-18-004', date: '2024-09-18', test: 'Urinalysis', type: 'Urinalysis', status: 'Completed' },
-      { id: 'ORD-2024-09-05-005', date: '2024-09-05', test: 'Comprehensive Metabolic Panel (CMP)', type: 'CMP', status: 'Completed' },
-    ]
-    // Ejemplo de fetch real:
-    // const pacienteRes = await axios.get(`${config.API_BASE_URL}/paciente/${documento}`)
-    // paciente.value = pacienteRes.data
-    // const ordenesRes = await axios.get(`${config.API_BASE_URL}/ordenes?documento=${documento}`)
-    // ordenes.value = ordenesRes.data
+    const res = await axios.get(`${config.API_BASE_URL}/ordenes`)
+    ordenes.value = res.data       
   } catch (e) {
     mensaje.value = 'No se pudo cargar el historial.'
     hasError.value = true
@@ -112,7 +91,7 @@ function daysInMonth(month, year) {
       View and manage lab orders and results for patient: <b>{{ paciente?.nombre || documento }}</b>
     </div>
     <div class="lab-history-search">
-      <input v-model="search" class="search-input" placeholder="Search by order ID or test name" />
+      <input v-model="searchDocumento" class="search-input" placeholder="Filtrar por documento de paciente" />
     </div>
     <div class="lab-history-filters">
       <select v-model="testType" class="filter-select">
@@ -137,23 +116,23 @@ function daysInMonth(month, year) {
         <thead>
           <tr>
             <th>Order ID</th>
-            <th>Date</th>
-            <th>Tests Ordered</th>
-            <th>Status</th>
-            <th>Results</th>
+            <th>Paciente</th>
+            <th>Documento</th>
+            <th>Fecha</th>
+            <th>Estado</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="orden in filteredOrders" :key="orden.id">
+          <tr v-for="orden in ordenesFiltradas" :key="orden.id">
             <td>{{ orden.id }}</td>
-            <td><a href="#" class="order-date-link">{{ orden.date }}</a></td>
-            <td>{{ orden.test }}</td>
-            <td><span class="status-completed">Completed</span></td>
-            <td><a href="#" class="view-results-link">View Results</a></td>
+            <td>{{ orden.paciente?.nombre_completo }}</td>
+            <td>{{ orden.paciente?.documento }}</td>
+            <td>{{ new Date(orden.fecha_creacion).toLocaleDateString() }}</td>
+            <td>{{ orden.estado }}</td>
           </tr>
         </tbody>
       </table>
-      <div v-if="!filteredOrders.length && !loading" class="no-orders">No lab orders found.</div>
+      <div v-if="mensaje" :class="{ error: hasError }">{{ mensaje }}</div>
     </div>
   </div>
 </template>
